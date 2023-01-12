@@ -1,0 +1,30 @@
+{
+  "name": "chatme-bot",
+  "version": "0.0.1",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "watch": "cd server && tsc-watch --onSuccess \"npm run start\"",
+    "start": "env $(cat .env) nodemon server/dist/index.js --watch server/dist",
+    "test": "npm run test:unit && npm run test:integration",
+    "prod:start": "env $(cat .env.production) pm2 start server/dist/index.js --name chatme-bot --update-env"
+  },
+  "devDependencies": {
+    "@types/node": "^18.11.18",
+    "near-cli": "^3.4.2",
+    "nodemon": "^2.0.20",
+    "ts-node": "^10.9.1",
+    "tsc-watch": "^6.0.0",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "@urql/core": "^3.1.1",
+    "axios": "^1.2.1",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "graphql": "^16.6.0",
+    "near-api-js": "^1.1.0",
+    "node-json-db": "^2.1.3"
+  }
+}
