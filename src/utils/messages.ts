@@ -205,8 +205,15 @@ export const processMessage = async (message: ProcessMessage) => {
 
   await increaseUserRequests(message.toAddress);
 
-  const response = await getOpenAIResponse(decodedText);
-  const responseText = response.data.choices[0].text.trim();
+  let responseText = "";
+  let errorOpenAI = {};
+  try {
+    const response = await getOpenAIResponse(decodedText);
+    responseText = response.data.choices[0].text.trim();
+  } catch (err) {
+    errorOpenAI = err;
+  }
+
   if (responseText) {
     // Success response from AI
     sendReplyMessage(
@@ -225,7 +232,7 @@ export const processMessage = async (message: ProcessMessage) => {
     sendReplyMessage(
       chatmeContractAddress(NEAR_NETWORK),
       message,
-      `AI error: ${JSON.stringify(response)}`
+      `AI error: ${JSON.stringify(errorOpenAI)}`
     );
   }
 }
