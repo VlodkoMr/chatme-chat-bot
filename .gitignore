@@ -4,7 +4,9 @@
 .env.testnet
 .env.production
 
-botDatabase.json
+bot-local-database.json
+bot-testnet-database.json
+bot-production-database.json
 
 ### macOS ###
 # General

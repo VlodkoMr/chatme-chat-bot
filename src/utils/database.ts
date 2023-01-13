@@ -12,6 +12,34 @@ try {
   console.log('New Database created');
   await DB.push("/lastId", 0);
   await DB.push("/pubKeys", {});
+  await DB.push("/countRequests", {});
+}
+
+/**
+ * Get count user AI requests. Limited by Account level.
+ */
+export const getCountUserRequests = async (account: string): Promise<number> => {
+  try {
+    const requests = await DB.getData("/countRequests");
+    return requests[account] || 0;
+  } catch (error) {
+    console.error('DB read error', error);
+  }
+}
+
+/**
+ * Update count user AI requests
+ * @param account
+ */
+export const increaseUserRequests = async (account: string) => {
+  try {
+    let countRequests = await DB.getData("/countRequests");
+    let current = countRequests[account] || 0;
+    countRequests[account] = current + 1;
+    await DB.push("/countRequests", countRequests);
+  } catch (error) {
+    console.error('DB error', error);
+  }
 }
 
 /**
@@ -30,7 +58,11 @@ export const getLastMessageId = async (): Promise<number> => {
  * @param id
  */
 export const updateLastMessageId = async (id: number) => {
-  await DB.push("/lastId", id);
+  try {
+    await DB.push("/lastId", id);
+  } catch (error) {
+    console.error('DB error', error);
+  }
 }
 
 /**

@@ -23,3 +23,11 @@ export interface NearConfig {
   helperUrl: string,
   explorerUrl: string
 }
+
+export interface UserAccount {
+  id: string,
+  level: number,
+  last_spam_report: number,
+  spam_counts: 0,
+  verified: boolean
+}

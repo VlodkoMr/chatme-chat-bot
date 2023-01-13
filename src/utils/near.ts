@@ -59,7 +59,7 @@ export const initContract = async (network: string) => {
   );
   const account: Account = await near.account(process.env.BOT_ACCOUNT_NAME);
   const contract: Contract = await new Contract(account, chatmeContractAddress(network), {
-    viewMethods: [""],
+    viewMethods: ["get_user_info"],
     changeMethods: ["send_private_message"],
   });
 

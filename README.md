@@ -1,6 +1,7 @@
 # ChatMe Bot example
 
-ChatMe bot that listen private messages and reply using OpenAI.
+ChatMe bot that listen private messages and reply using OpenAI. You can use this repo to build your own bot for chatMe, you can find more
+details in our documentation.
 
 ## Requirements
 

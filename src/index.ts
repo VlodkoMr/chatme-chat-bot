@@ -7,7 +7,7 @@ if (!process.env.BOT_PRIVATE_KEY || !process.env.BOT_ACCOUNT_NAME) {
 }
 
 // Check for new messages each N seconds
-const CHECK_INTERVAL_SECONDS: number = 4;
+const CHECK_INTERVAL_SECONDS: number = 3;
 
 const startMessagesCheck = async () => {
   const lastMessageInDB: number = await getLastMessageId();
@@ -17,28 +17,30 @@ const startMessagesCheck = async () => {
     let processMessages: ProcessMessage[] = [];
 
     // Check and filter last messages
-    rooms.map(room => {
-      const messageId = parseInt(room.last_message.id);
+    if (rooms.length) {
+      rooms.map(room => {
+        const messageId = parseInt(room.last_message.id);
 
-      if (messageId > lastMessageInDB && room.last_message.to_address === process.env.BOT_ACCOUNT_NAME) {
-        newMessagesList.push(messageId);
-        processMessages.push({
-          toAddress: room.last_message.from_address,
-          text: room.last_message.text.trim(),
-          encryptKey: room.last_message.encrypt_key,
-          messageId
+        if (messageId > lastMessageInDB && room.last_message.to_address === process.env.BOT_ACCOUNT_NAME) {
+          newMessagesList.push(messageId);
+          processMessages.push({
+            toAddress: room.last_message.from_address,
+            text: room.last_message.text.trim(),
+            encryptKey: room.last_message.encrypt_key,
+            messageId
+          });
+        }
+      });
+
+      // Reply to new messages
+      if (newMessagesList.length > 0) {
+        const latestNewId: number = Math.max(...newMessagesList);
+        updateLastMessageId(latestNewId).then(() => {
+          processMessages.map(message => {
+            processMessage(message);
+          });
         });
       }
-    });
-
-    // Reply to new messages
-    if (newMessagesList.length > 0) {
-      const latestNewId: number = Math.max(...newMessagesList);
-      updateLastMessageId(latestNewId).then(() => {
-        processMessages.map(message => {
-          processMessage(message);
-        });
-      });
     }
 
     // Repeat in few seconds

@@ -2,8 +2,8 @@ import {createClient, gql} from '@urql/core';
 import {Configuration, OpenAIApi} from 'openai'
 import {chatmeContractAddress, initContract} from "./near.js";
 import {convertToTera} from "./format.js";
-import {ChatRoom, ProcessMessage} from "../types.js";
-import {getPublicKey, updateUserPublicKey} from "./database.js";
+import {ChatRoom, ProcessMessage, UserAccount} from "../types.js";
+import {getCountUserRequests, getPublicKey, increaseUserRequests, updateUserPublicKey} from "./database.js";
 import {messageDecode, messageEncode} from "./secretChat.js";
 
 const CONTRACT: any = await initContract(process.env.NODE_ENV);
@@ -104,6 +104,25 @@ const getOpenAIResponse = async (requestText: string) => {
 }
 
 /**
+ * Limit requests to AI based on account level
+ * @param address
+ * @return number
+ */
+const getRequestLimit = async (address: string): Promise<number> => {
+  const userAccount: UserAccount = await CONTRACT.get_user_info({address});
+  if (userAccount) {
+    if (userAccount.level === 2) {
+      // Gold
+      return 90;
+    } else {
+      // Bronze
+      return 30;
+    }
+  }
+  return 3;
+}
+
+/**
  * Process one message from user
  * @param message
  */
@@ -160,13 +179,31 @@ export const processMessage = async (message: ProcessMessage) => {
   }
 
   // Limit AI requests from testnet
-  // if (NEAR_NETWORK !== 'mainnet') {
-  //   return sendReplyMessage(
-  //     message.toAddress,
-  //     message,
-  //     `Sorry, AI available only on mainnet`
-  //   );
-  // }
+  if (NEAR_NETWORK !== 'mainnet' && message.toAddress !== "vlodkow.testnet") {
+    return sendReplyMessage(
+      message.toAddress,
+      message,
+      `Sorry, AI Bot available only on NEAR Mainnet`
+    );
+  }
+
+  // Check requests count and limit by account level
+  let requestsLimit = await getRequestLimit(message.toAddress);
+  let totalRequests = await getCountUserRequests(message.toAddress);
+  if (totalRequests >= requestsLimit) {
+    let responseText = `Sorry, you reached daily requests limit (${requestsLimit} messages) for your account.`;
+    if (requestsLimit < 90) {
+      responseText += `You can update your account level in dashboard to talk more with AI Bot.`;
+    }
+
+    return sendReplyMessage(
+      message.toAddress,
+      message,
+      responseText
+    );
+  }
+
+  await increaseUserRequests(message.toAddress);
 
   const response = await getOpenAIResponse(decodedText);
   const responseText = response.data.choices[0].text.trim();
