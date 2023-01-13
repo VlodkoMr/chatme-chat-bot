@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "watch": "cd server && tsc-watch --onSuccess \"npm run start\"",
+    "watch": "tsc-watch --onSuccess \"npm run start\"",
     "test": "npm run test:unit && npm run test:integration",
-    "start": "env $(cat .env.testnet) nodemon server/dist/index.js --watch server/dist",
-    "dev:start": "env $(cat .env.testnet) pm2 start server/dist/index.js --name chatme-dev-bot --update-env",
-    "prod:start": "env $(cat .env.production) pm2 start server/dist/index.js --name chatme-prod-bot --update-env"
+    "start": "env $(cat .env.testnet) nodemon dist/index.js --watch dist",
+    "dev:start": "env $(cat .env.testnet) pm2 start dist/index.js --name chatme-dev-bot --update-env",
+    "prod:start": "env $(cat .env.production) pm2 start dist/index.js --name chatme-prod-bot --update-env"
   },
   "devDependencies": {
     "@types/node": "^18.11.18",

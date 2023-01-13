@@ -1,8 +1,8 @@
-# Chatme Bot example
+# ChatMe Bot example
 
 ChatMe bot that listen private messages and reply using OpenAI.
 
-## Requirments
+## Requirements
 
 - nodeJS 16+
 
@@ -36,7 +36,7 @@ Next steps required to deploy your bot:
 - Check account balance, your account need some NEAR tokens to send messages.
 - Update BOT_ACCOUNT_NAME - set bot wallet address in your environment file.
 - Get private key for this NEAR account and update BOT_PRIVATE_KEY in your environment file.
-- Update bot request/response functionality in server/src/utils/messages.ts.
+- Update bot request/response functionality in src/utils/messages.ts.
 - Build: ```npm run build```
 - Deploy to server and run by using PM2: ```npm run prod:start```
 
