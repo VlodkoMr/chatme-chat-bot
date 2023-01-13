@@ -213,6 +213,7 @@ export const processMessage = async (message: ProcessMessage) => {
     responseText = response.data.choices[0].text.trim();
   } catch (err) {
     errorOpenAI = err;
+    console.error(err);
   }
 
   if (responseText) {
