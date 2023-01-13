@@ -59,10 +59,11 @@ export const loadRoomMessages = (): Promise<ChatRoom[]> => new Promise(
  * @param toAddress - message recipient
  * @param message - original message details from user
  * @param response - message text response
+ * @param encrypt - is encryption enabled
  */
-const sendReplyMessage = async (toAddress: string, message: ProcessMessage, response: string) => {
+const sendReplyMessage = async (toAddress: string, message: ProcessMessage, response: string, encrypt: boolean = true) => {
   let encryptKey: string = "";
-  if (message.encryptKey) {
+  if (message.encryptKey && encrypt) {
     let userPubKey = await getPublicKey(message.toAddress);
     if (userPubKey) {
       let encodeDetails = messageEncode(response, userPubKey);
@@ -96,7 +97,7 @@ const getOpenAIResponse = async (requestText: string) => {
     model: "text-davinci-003",
     prompt: requestText,
     temperature: 0, // Higher values means the model will take more risks.
-    max_tokens: 4096, // The maximum number of tokens to generate in the completion. Most models have a context length of 2048 tokens (except for the newest models, which support 4096).
+    max_tokens: 2048, // The maximum number of tokens to generate in the completion. Most models have a context length of 2048 tokens (except for the newest models, which support 4096).
     top_p: 1, // alternative to sampling with temperature, called nucleus sampling
     frequency_penalty: 0.5, // Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
     presence_penalty: 0, // Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.
@@ -232,7 +233,8 @@ export const processMessage = async (message: ProcessMessage) => {
     sendReplyMessage(
       chatmeContractAddress(NEAR_NETWORK),
       message,
-      `AI error: ${JSON.stringify(errorOpenAI)}`
+      `AI error: ${JSON.stringify(errorOpenAI)}`,
+      false
     );
   }
 }
