@@ -38,6 +38,8 @@ Next steps required to deploy your bot:
 - Get private key for this NEAR account and update BOT_PRIVATE_KEY in your environment file.
 - Update bot request/response functionality in src/utils/messages.ts.
 - Build: ```npm run build```
-- Deploy to server and run by using PM2: ```npm run prod:start```
+- Deploy to server and run by using PM2:
+    - For testnet:```npm run dev:start```
+    - For mainnet:```npm run prod:start```
 
 
