@@ -29,8 +29,8 @@ const getConfig = (network: string): NearConfig => {
   }
 }
 
-export const chatmeContractAddress = (): string => {
-  switch (process.env.NODE_ENV || "testnet") {
+export const chatmeContractAddress = (network: string): string => {
+  switch (network) {
     case "local":
       return "near-message.testnet";
     case "testnet":
@@ -40,64 +40,22 @@ export const chatmeContractAddress = (): string => {
   }
 }
 
-export const initBotAccount = async (network: string) => {
+export const initContract = async (network: string) => {
   const nearConfig = getConfig(network);
   const privateKey = process.env.BOT_PRIVATE_KEY.replace("ed25519:", "");
 
   const keyPair = new utils.key_pair.KeyPairEd25519(privateKey);
   const keyStore = new keyStores.InMemoryKeyStore();
-  console.log(`keyPair`, keyPair);
   await keyStore.setKey(nearConfig.networkId, process.env.BOT_ACCOUNT_NAME, keyPair);
-  console.log(`keyStore`, keyStore);
 
   const near: Near = await connect(
     Object.assign({keyStore: keyStore}, nearConfig)
   );
   const account: Account = await near.account(process.env.BOT_ACCOUNT_NAME);
-  console.log(`account`, account);
-  const contract: Contract = await new Contract(account, chatmeContractAddress(), {
+  const contract: Contract = await new Contract(account, chatmeContractAddress(network), {
     viewMethods: [""],
     changeMethods: ["send_private_message"],
   });
 
   return contract;
 };
-
-// const createNewTransaction = async (
-//   {
-//     receiverId,
-//     actions,
-//     nonceOffset = 1,
-//   }) => {
-//   // const nearInternal = window.walletConnection._near;
-//   // const localKey = await nearInternal.connection.signer.getPublicKey(
-//   //   window.accountId,
-//   //   nearInternal.config.networkId
-//   // );
-//   //
-//   // const accessKey = await window.walletConnection
-//   //   .account()
-//   //   .accessKeyForTransaction(receiverId, actions, localKey);
-//   // if (!accessKey) {
-//   //   throw new Error(
-//   //     `Cannot find matching key for transaction sent to ${receiverId}`
-//   //   );
-//   // }
-//
-//   const block = await nearInternal.connection.provider.block({
-//     finality: "final",
-//   });
-//   console.log(`block`, block);
-//   const blockHash = base_decode(block.header.hash);
-//   const publicKey = PublicKey.from(accessKey.public_key);
-//   const nonce = accessKey.access_key.nonce + nonceOffset;
-//
-//   return createTransaction(
-//     window.walletConnection.account().accountId,
-//     publicKey,
-//     receiverId,
-//     nonce,
-//     actions,
-//     blockHash
-//   );
-// };
