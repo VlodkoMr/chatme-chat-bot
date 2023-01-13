@@ -2,7 +2,7 @@ import {JsonDB, Config} from 'node-json-db';
 
 // Init simple file-based database
 const DB = new JsonDB(
-  new Config("botDatabase", true, false, '/')
+  new Config(`bot-${process.env.NODE_ENV || "testnet"}-database`, true, false, '/')
 );
 
 // Init new Database
