@@ -9,6 +9,15 @@ export type ChatRoom = {
 }
 
 export type ProcessMessage = {
-  roomId: string,
-  text: string
+  toAddress: string,
+  text: string,
+  messageId: number
+}
+
+export interface NearConfig {
+  networkId: string,
+  nodeUrl: string,
+  walletUrl: string,
+  helperUrl: string,
+  explorerUrl: string
 }

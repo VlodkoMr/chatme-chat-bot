@@ -1,30 +1,29 @@
 import express from "express";
-// import cors from "cors";
-import {initBotAccount} from "./utils/near.js";
-import {Account} from "near-api-js/lib/account.js";
 import {loadRoomMessages, processMessage} from "./utils/messages.js";
 import {getLastMessageId, updateLastMessageId} from "./utils/database.js";
 import {ProcessMessage} from "./types.js";
 
-const PORT: number = parseInt(process.env.SERVER_PORT) || 5000;
-const NEAR_NETWORK: string = process.env.NODE_ENV || "testnet";
-
+// import cors from "cors";
 // const corsConfig = {
 //   origin: ["http://localhost:1234"],
 //   methods: "GET,OPTION,HEAD,PUT,PATCH,POST,DELETE",
 //   optionsSuccessStatus: 200,
 // };
 
+const PORT: number = parseInt(process.env.SERVER_PORT) || 5000;
+const NEAR_NETWORK: string = process.env.NODE_ENV || "testnet";
+
+if (!process.env.BOT_PRIVATE_KEY || !process.env.BOT_ACCOUNT_NAME) {
+  throw Error("Wrong configuration - provide BOT_PRIVATE_KEY and BOT_ACCOUNT_NAME details.");
+}
+
 const app = express();
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
 // app.use(cors(corsConfig));
 
-// Check for new messages each N seconds.
-const CHECK_INTERVAL_SECONDS: number = 3;
-
-// Init bot account from environment settings.
-const botAccount: Account = await initBotAccount(NEAR_NETWORK);
+// Check for new messages each N seconds
+const CHECK_INTERVAL_SECONDS: number = 5;
 
 const startMessagesCheck = async () => {
   const lastMessageInDB: number = await getLastMessageId();
@@ -38,8 +37,9 @@ const startMessagesCheck = async () => {
       if (messageId > lastMessageInDB && room.last_message.to_address === process.env.BOT_ACCOUNT_NAME) {
         newMessagesList.push(messageId);
         processMessages.push({
-          roomId: room.id,
+          toAddress: room.last_message.from_address,
           text: room.last_message.text,
+          messageId
         });
       }
     });
@@ -49,7 +49,7 @@ const startMessagesCheck = async () => {
       updateLastMessageId(latestNewId).then(() => {
         console.log(`processMessages`, processMessages);
         processMessages.map(message => {
-          processMessage(botAccount, message);
+          processMessage(message);
         });
       });
     }
@@ -60,6 +60,6 @@ const startMessagesCheck = async () => {
   });
 }
 
-// Start new messages checks.
+// Start new messages checks
 startMessagesCheck().then();
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
