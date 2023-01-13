@@ -43,4 +43,9 @@ Next steps required to deploy your bot:
     - For testnet:```npm run dev:start```
     - For mainnet:```npm run prod:start```
 
+## Server update deployment
 
+- ```git pull```
+- ```npm run build```
+- ```pm2 restart chatme-dev-bot --update-env```
+- ```pm2 restart chatme-prod-bot --update-env```
