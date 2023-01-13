@@ -3,6 +3,8 @@ import {Configuration, OpenAIApi} from 'openai'
 import {chatmeContractAddress, initContract} from "./near.js";
 import {convertToTera} from "./format.js";
 import {ChatRoom, ProcessMessage} from "../types.js";
+import {getPublicKey, updateUserPublicKey} from "./database.js";
+import {messageDecode, messageEncode} from "./secretChat.js";
 
 const CONTRACT: any = await initContract(process.env.NODE_ENV);
 const NEAR_NETWORK: string = process.env.NODE_ENV || "testnet";
@@ -36,6 +38,7 @@ export const loadRoomMessages = (): Promise<ChatRoom[]> => new Promise(
                     text
                     from_address
                     to_address
+                    encrypt_key
                 }
             }
         }`;
@@ -47,13 +50,24 @@ export const loadRoomMessages = (): Promise<ChatRoom[]> => new Promise(
   });
 
 // Send reply message
-const sendReplyMessage = async (toAddress: string, messageId: number, response: string) => {
+const sendReplyMessage = async (toAddress: string, message: ProcessMessage, response: string) => {
+  let encryptKey = "";
+  if (message.encryptKey) {
+    let userPubKey = await getPublicKey(message.toAddress);
+    if (userPubKey) {
+      let encodeDetails = messageEncode(response, userPubKey);
+      encryptKey = encodeDetails.nonce;
+      response = encodeDetails.secret;
+    }
+  }
+
   await CONTRACT.send_private_message({
     args: {
       to_address: toAddress,
       text: response,
       image: "",
-      reply_message_id: messageId.toString(),
+      reply_message_id: message.messageId.toString(),
+      encrypt_key: encryptKey
     },
     gas: convertToTera("10")
   });
@@ -78,46 +92,84 @@ const getOpenAIResponse = async (requestText: string) => {
 
 // Process one message
 export const processMessage = async (message: ProcessMessage) => {
-  // Example of short message reply
-  if (message.text.length < 2) {
+  // Accept secret chat start
+  if (message.text.indexOf("(secret-start:") !== -1) {
+    const keyParts = message.text.split(":");
+    if (keyParts.length == 2) {
+      const chatPublicKey = keyParts[1].replace(")", "");
+      console.log(`Set chatPublicKey`, chatPublicKey);
+      await updateUserPublicKey(message.toAddress, chatPublicKey);
+    }
+
     return sendReplyMessage(
       message.toAddress,
-      message.messageId,
-      `I'm sorry, I didn't understand what you meant by "${message.text}". Can you please provide more context or clarify your question?`
+      message,
+      `(secret-accept:${process.env.SECRET_CHAT_PUBLIC_KEY})`
     );
   }
 
-  if (message.text === "(like)") {
+  if (message.text.indexOf("(secret-end)") !== -1) {
+    // Accept secret chat
     return sendReplyMessage(
       message.toAddress,
-      message.messageId,
+      message,
+      `Ok, private chat disabled.`
+    );
+  }
+
+  // ----------- Decode
+
+  // Decode private message
+  let decodedText = message.text.trim();
+  console.log(`decodedText`, decodedText);
+  console.log(`message.encryptKey`, message.encryptKey);
+  if (message.encryptKey) {
+    let userPubKey = await getPublicKey(message.toAddress);
+    console.log(`userPubKey`, userPubKey);
+    decodedText = messageDecode(decodedText, userPubKey, message.encryptKey);
+  }
+
+  // ----------- Reply
+
+  // Example of short message reply
+  if (decodedText.length < 2) {
+    return sendReplyMessage(
+      message.toAddress,
+      message,
+      `I'm sorry, I didn't understand what you meant by "${decodedText}". Can you please provide more context or clarify your question?`
+    );
+  }
+
+  if (decodedText === "(like)") {
+    return sendReplyMessage(
+      message.toAddress,
+      message,
       `(like)`
     );
   }
 
-  // Your custom logic...
-  const response = await getOpenAIResponse(message.text);
-  const responseText = response.data.choices[0].text;
+  const response = await getOpenAIResponse(decodedText);
+  const responseText = response.data.choices[0].text.trim();
 
   if (responseText) {
     // Success
     sendReplyMessage(
       message.toAddress,
-      message.messageId,
-      responseText.trim()
+      message,
+      responseText
     );
   } else {
     // Notify user about error
     sendReplyMessage(
       message.toAddress,
-      message.messageId,
+      message,
       "Sorry, there is some error with AI. I sent notification to chatMe team."
     );
 
     // send chatMe team notification
     sendReplyMessage(
       chatmeContractAddress(NEAR_NETWORK),
-      message.messageId,
+      message,
       `AI error: ${JSON.stringify(response)}`
     );
   }

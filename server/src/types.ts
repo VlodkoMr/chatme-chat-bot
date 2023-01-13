@@ -5,13 +5,15 @@ export type ChatRoom = {
     text: string,
     from_address: string,
     to_address: string,
+    encrypt_key: string,
   }
 }
 
 export type ProcessMessage = {
   toAddress: string,
   text: string,
-  messageId: number
+  messageId: number,
+  encryptKey: string
 }
 
 export interface NearConfig {

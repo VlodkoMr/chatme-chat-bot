@@ -1,6 +1,7 @@
 import {loadRoomMessages, processMessage} from "./utils/messages.js";
-import {getLastMessageId, updateLastMessageId} from "./utils/database.js";
+import {getLastMessageId, getPublicKey, updateLastMessageId} from "./utils/database.js";
 import {ProcessMessage} from "./types.js";
+import {messageDecode} from "./utils/secretChat.js";
 
 if (!process.env.BOT_PRIVATE_KEY || !process.env.BOT_ACCOUNT_NAME) {
   throw Error("Wrong configuration - provide BOT_PRIVATE_KEY and BOT_ACCOUNT_NAME details.");
@@ -18,12 +19,15 @@ const startMessagesCheck = async () => {
 
     rooms.map(room => {
       const messageId = parseInt(room.last_message.id);
+      const encryptKey = room.last_message.encrypt_key;
+
       if (messageId > lastMessageInDB && room.last_message.to_address === process.env.BOT_ACCOUNT_NAME) {
         newMessagesList.push(messageId);
         processMessages.push({
           toAddress: room.last_message.from_address,
-          text: room.last_message.text,
-          messageId
+          text: room.last_message.text.trim(),
+          messageId,
+          encryptKey
         });
       }
     });
