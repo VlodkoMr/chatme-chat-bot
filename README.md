@@ -1,6 +1,10 @@
 # Chatme Bot example
 
-...
+ChatMe bot that listen private messages and reply using OpenAI.
+
+## Requirments
+
+- nodeJS 16+
 
 ## Install
 
@@ -10,25 +14,30 @@
 npm install
 ```
 
-2. Copy ".env.sample" into ".env.testnet" and/or ".env.production" files and set variables:
+2. Copy ".env.sample" into ".env.testnet" and/or ".env.production" files and set environment variables:
 
-- NODE_ENV: testnet or mainnet environment where you contract deployed.
-- CONTRACT_PRIVATE_KEY: Private key for deployed smart-contract (without ed25519:).
-- DB_CONNECTION: prisma database connection URL.
+- NODE_ENV: testnet or mainnet environment (NEAR network).
+- BOT_PRIVATE_KEY: Private key for your bot account.
+- BOT_ACCOUNT_NAME: NEAR wallet for your bot account.
 
-3. Update server/index.js script to handle new transactions and save in your database structure.
-4. Upload script and run.
+NOTE: Our bot example using OpenAI API to process responses to user and require OPENAI_API_KEY in environment file.
 
 ## Local development
 
-- npm run watch
+We recommend to use watch script for local development - it build typescript and relaunch nodeJS process:
 
-## Setup & Deploy
+```npm run watch```
+
+## Deployment & Production
 
 Next steps required to deploy your bot:
 
-- Create NEAR account or use existing one as bot wallet address. Set this address for BOT_ACCOUNT_NAME in .env.production file.
-- Get private key for this account and update BOT_PRIVATE_KEY in .env.production file.
-- Update bot request/response functionality in server/src/index.ts.
+- Create NEAR account or use existing one as bot wallet address.
 - Check account balance, your account need some NEAR tokens to send messages.
+- Update BOT_ACCOUNT_NAME - set bot wallet address in your environment file.
+- Get private key for this NEAR account and update BOT_PRIVATE_KEY in your environment file.
+- Update bot request/response functionality in server/src/utils/messages.ts.
+- Build: ```npm run build```
+- Deploy to server and run by using PM2: ```npm run prod:start```
+
 

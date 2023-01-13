@@ -1,37 +1,37 @@
 import {loadRoomMessages, processMessage} from "./utils/messages.js";
-import {getLastMessageId, getPublicKey, updateLastMessageId} from "./utils/database.js";
+import {getLastMessageId, updateLastMessageId} from "./utils/database.js";
 import {ProcessMessage} from "./types.js";
-import {messageDecode} from "./utils/secretChat.js";
 
 if (!process.env.BOT_PRIVATE_KEY || !process.env.BOT_ACCOUNT_NAME) {
   throw Error("Wrong configuration - provide BOT_PRIVATE_KEY and BOT_ACCOUNT_NAME details.");
 }
 
 // Check for new messages each N seconds
-const CHECK_INTERVAL_SECONDS: number = 5;
+const CHECK_INTERVAL_SECONDS: number = 4;
 
 const startMessagesCheck = async () => {
   const lastMessageInDB: number = await getLastMessageId();
 
   loadRoomMessages().then(rooms => {
-    let processMessages: ProcessMessage[] = [];
     let newMessagesList: number[] = [];
+    let processMessages: ProcessMessage[] = [];
 
+    // Check and filter last messages
     rooms.map(room => {
       const messageId = parseInt(room.last_message.id);
-      const encryptKey = room.last_message.encrypt_key;
 
       if (messageId > lastMessageInDB && room.last_message.to_address === process.env.BOT_ACCOUNT_NAME) {
         newMessagesList.push(messageId);
         processMessages.push({
           toAddress: room.last_message.from_address,
           text: room.last_message.text.trim(),
-          messageId,
-          encryptKey
+          encryptKey: room.last_message.encrypt_key,
+          messageId
         });
       }
     });
 
+    // Reply to new messages
     if (newMessagesList.length > 0) {
       const latestNewId: number = Math.max(...newMessagesList);
       updateLastMessageId(latestNewId).then(() => {
@@ -41,7 +41,7 @@ const startMessagesCheck = async () => {
       });
     }
 
-    // Check new messages in few seconds
+    // Repeat in few seconds
     setTimeout(() => {
       startMessagesCheck();
     }, CHECK_INTERVAL_SECONDS * 1000);
@@ -50,5 +50,5 @@ const startMessagesCheck = async () => {
 
 // Start new messages checks
 startMessagesCheck().then(() => {
-  console.log(`Bot Started.`);
+  console.log(`--- Bot Started ---`);
 });

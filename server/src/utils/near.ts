@@ -3,6 +3,7 @@ import {NearConfig} from "../types.js";
 import {Near} from "near-api-js/lib/near.js";
 import {Account} from "near-api-js/lib/account.js";
 
+// NEAR network config
 const getConfig = (network: string): NearConfig => {
   switch (network) {
     case "production":
@@ -29,6 +30,7 @@ const getConfig = (network: string): NearConfig => {
   }
 }
 
+// Get chetMe contract for different networks
 export const chatmeContractAddress = (network: string): string => {
   switch (network) {
     case "local":
@@ -40,6 +42,10 @@ export const chatmeContractAddress = (network: string): string => {
   }
 }
 
+/**
+ * Init Bot account and chatMe contract
+ * @param network
+ */
 export const initContract = async (network: string) => {
   const nearConfig = getConfig(network);
   const privateKey = process.env.BOT_PRIVATE_KEY.replace("ed25519:", "");

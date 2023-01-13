@@ -1,48 +1,61 @@
 import {JsonDB, Config} from 'node-json-db';
 
 // Init simple file-based database
-const db = new JsonDB(
+const DB = new JsonDB(
   new Config("botDatabase", true, false, '/')
 );
 
 // Init new Database
 try {
-  await db.getData("/lastId");
+  await DB.getData("/lastId");
 } catch (e) {
-  console.error('Create new Database');
-  await db.push("/lastId", 0);
-  await db.push("/pubKeys", {});
+  console.log('New Database created');
+  await DB.push("/lastId", 0);
+  await DB.push("/pubKeys", {});
 }
 
-// Get last message ID
+/**
+ * Get last message ID from database
+ */
 export const getLastMessageId = async (): Promise<number> => {
   try {
-    return await db.getData("/lastId");
+    return await DB.getData("/lastId");
   } catch (error) {
     console.error('DB read error', error);
   }
 }
 
-// Update last message ID
+/**
+ * Update last message ID in database
+ * @param id
+ */
 export const updateLastMessageId = async (id: number) => {
-  await db.push("/lastId", id);
+  await DB.push("/lastId", id);
 }
 
-// Get public key
+/**
+ * Get public key from database
+ * @param account
+ */
 export const getPublicKey = async (account: string): Promise<string | null> => {
   try {
-    const pubKeys = await db.getData("/pubKeys");
+    const pubKeys = await DB.getData("/pubKeys");
     return pubKeys[account] || null;
   } catch (error) {
     console.error('DB read error', error);
   }
 }
 
+/**
+ * Save user public key in database
+ * @param account
+ * @param key
+ */
 export const updateUserPublicKey = async (account: string, key: string) => {
   try {
-    let pubKeys = await db.getData("/pubKeys");
+    let pubKeys = await DB.getData("/pubKeys");
     pubKeys[account] = key;
-    await db.push("/pubKeys", pubKeys);
+    await DB.push("/pubKeys", pubKeys);
   } catch (error) {
     console.error('DB error', error);
   }
