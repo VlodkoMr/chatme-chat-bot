@@ -117,13 +117,13 @@ const getRequestLimit = async (address: string): Promise<number> => {
   if (userAccount) {
     if (userAccount.level === 2) {
       // Gold
-      return 90;
+      return 50;
     } else {
       // Bronze
-      return 30;
+      return 20;
     }
   }
-  return 3;
+  return 2;
 }
 
 /**
