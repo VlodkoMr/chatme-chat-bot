@@ -11,7 +11,7 @@ if (!process.env.BOT_PRIVATE_KEY || !process.env.BOT_ACCOUNT_NAME) {
 const CHECK_INTERVAL_SECONDS: number = 3;
 
 // Cron scheduler
-cron.schedule('0 0 * * *', () => {
+cron.schedule('* * * * *', () => {
   cleanupDailyRequests().then(() => {
     console.log(`Cleanup successful`);
   });
