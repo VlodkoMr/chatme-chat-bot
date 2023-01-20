@@ -1,6 +1,7 @@
 import {loadRoomMessages, processMessage} from "./utils/messages.js";
-import {getLastMessageId, updateLastMessageId} from "./utils/database.js";
+import {cleanupDailyRequests, getLastMessageId, updateLastMessageId} from "./utils/database.js";
 import {ProcessMessage} from "./types.js";
+import cron from "node-cron";
 
 if (!process.env.BOT_PRIVATE_KEY || !process.env.BOT_ACCOUNT_NAME) {
   throw Error("Wrong configuration - provide BOT_PRIVATE_KEY and BOT_ACCOUNT_NAME details.");
@@ -9,6 +10,14 @@ if (!process.env.BOT_PRIVATE_KEY || !process.env.BOT_ACCOUNT_NAME) {
 // Check for new messages each N seconds
 const CHECK_INTERVAL_SECONDS: number = 3;
 
+// Cron scheduler
+cron.schedule('0 0 * * *', () => {
+  cleanupDailyRequests().then(() => {
+    console.log(`Cleanup successful`);
+  });
+});
+
+// Main checks loop
 const startMessagesCheck = async () => {
   const lastMessageInDB: number = await getLastMessageId();
 

@@ -43,6 +43,17 @@ export const increaseUserRequests = async (account: string) => {
 }
 
 /**
+ * Cleanup daily AI usage limit
+ */
+export const cleanupDailyRequests = async () => {
+  try {
+    await DB.push("/countRequests", {});
+  } catch (error) {
+    console.error('DB error', error);
+  }
+}
+
+/**
  * Get last message ID from database
  */
 export const getLastMessageId = async (): Promise<number> => {
